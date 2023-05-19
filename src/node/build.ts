@@ -1,38 +1,38 @@
-import { CLIENT_ENTRY_PATH, SERVER_ENTRY_PATH } from "./constants/index";
-import { build as viteBuild, InlineConfig } from "vite";
-import pluginReact from "@vitejs/plugin-react";
-import type { RollupOutput } from "rollup";
-import { resolve, join } from "path";
-import fs from "fs-extra";
+import { CLIENT_ENTRY_PATH, SERVER_ENTRY_PATH } from './constants/index';
+import { build as viteBuild, InlineConfig } from 'vite';
+import pluginReact from '@vitejs/plugin-react';
+import type { RollupOutput } from 'rollup';
+import { resolve, join } from 'path';
+import fs from 'fs-extra';
 
-import { pathToFileURL } from "url";
+import { pathToFileURL } from 'url';
 
-import ora from "ora";
+import ora from 'ora';
 export async function bundle(root: string) {
   const resolveViteConfig = (isServer: boolean): InlineConfig => ({
-    mode: "production",
+    mode: 'production',
     root,
     // 注意加上这个插件，自动注入 import React from 'react'，避免 React is not defined 的错误
     plugins: [pluginReact()],
     build: {
       ssr: isServer,
-      outDir: isServer ? ".temp" : "build",
+      outDir: isServer ? '.temp' : 'build',
       rollupOptions: {
         input: isServer ? SERVER_ENTRY_PATH : CLIENT_ENTRY_PATH,
         output: {
-          format: isServer ? "cjs" : "esm",
-        },
-      },
-    },
+          format: isServer ? 'cjs' : 'esm'
+        }
+      }
+    }
   });
-  console.log(`Building client + server bundles...`);
+  console.log('Building client + server bundles...');
 
   try {
     const [clientBundle, serverBundle] = await Promise.all([
       // client build
       viteBuild(resolveViteConfig(false)),
       // server build
-      viteBuild(resolveViteConfig(true)),
+      viteBuild(resolveViteConfig(true))
     ]);
     return [clientBundle, serverBundle] as [RollupOutput, RollupOutput];
   } catch (e) {
@@ -46,9 +46,9 @@ export async function renderPage(
   clientBundle: RollupOutput
 ) {
   const clientChunk = clientBundle.output.find(
-    (chunk) => chunk.type === "chunk" && chunk.isEntry
+    (chunk) => chunk.type === 'chunk' && chunk.isEntry
   ); // 客户端 entry chunk
-  console.log("rendering page in server side");
+  console.log('rendering page in server side');
   const appHtml = render(); // server端返回html字符串
   // cilent端导入js脚本
   const html = `
@@ -65,14 +65,14 @@ export async function renderPage(
       <script type="module" src="./${clientChunk?.fileName}"></script>
     </body>
   </html>`.trim();
-  await fs.ensureDir(join(root, "build"));
-  await fs.writeFile(join(root, "build/index.html"), html);
-  await fs.remove(join(root, ".temp"));
+  await fs.ensureDir(join(root, 'build'));
+  await fs.writeFile(join(root, 'build/index.html'), html);
+  await fs.remove(join(root, '.temp'));
 }
 
 export async function build(root: string = process.cwd()) {
   const [clientBundle, serverBundle] = await bundle(root);
-  const serverEntryPath = resolve(root, ".temp", "ssr-entry.js");
+  const serverEntryPath = resolve(root, '.temp', 'ssr-entry.js');
   // const { render } = require(serverEntryPath);
   const { render } = await import(pathToFileURL(serverEntryPath).toString()); // 渲染html函数
   await renderPage(render, root, clientBundle);

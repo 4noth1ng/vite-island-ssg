@@ -99,7 +99,7 @@ async function bundle(root) {
       }
     }
   });
-  console.log(`Building client + server bundles...`);
+  console.log("Building client + server bundles...");
   try {
     const [clientBundle, serverBundle] = await Promise.all([
       // client build
