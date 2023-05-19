@@ -3,7 +3,11 @@ import { build as viteBuild, InlineConfig } from "vite";
 import pluginReact from "@vitejs/plugin-react";
 import type { RollupOutput } from "rollup";
 import { resolve, join } from "path";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
+
+import { pathToFileURL } from "url";
+
+import ora from "ora";
 export async function bundle(root: string) {
   const resolveViteConfig = (isServer: boolean): InlineConfig => ({
     mode: "production",
@@ -21,7 +25,6 @@ export async function bundle(root: string) {
       },
     },
   });
-
   console.log(`Building client + server bundles...`);
 
   try {
@@ -70,6 +73,7 @@ export async function renderPage(
 export async function build(root: string = process.cwd()) {
   const [clientBundle, serverBundle] = await bundle(root);
   const serverEntryPath = resolve(root, ".temp", "ssr-entry.js");
-  const { render } = require(serverEntryPath); // 渲染html函数
+  // const { render } = require(serverEntryPath);
+  const { render } = await import(pathToFileURL(serverEntryPath).toString()); // 渲染html函数
   await renderPage(render, root, clientBundle);
 }
