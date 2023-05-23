@@ -1,10 +1,12 @@
 {
-    "compilerOptions": {
-      "outDir": "dist",
-      "target": "ESNext" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
-      "module": "commonjs" /* Specify what module code is generated. */,
-      "rootDir": "." /* Specify the root folder within your source files. */,
-      "jsx": "react-jsx",
-      "esModuleInterop": true
-    }
-  }
+  "compilerOptions": {
+    "module": "ESNext",
+    "outDir": "dist",
+    "rootDir": ".",
+    "target": "ESNext",
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+  },
+  "include": ["e2e/**/*.ts", "src/**/*.ts", "src/**/*.tsx"]
+}

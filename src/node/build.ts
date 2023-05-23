@@ -1,19 +1,14 @@
-import { CLIENT_ENTRY_PATH, SERVER_ENTRY_PATH } from './constants/index';
 import { build as viteBuild, InlineConfig } from 'vite';
-import pluginReact from '@vitejs/plugin-react';
 import type { RollupOutput } from 'rollup';
-import { resolve, join } from 'path';
+import { CLIENT_ENTRY_PATH, SERVER_ENTRY_PATH } from './constants';
+import { join } from 'path';
 import fs from 'fs-extra';
-
-import { pathToFileURL } from 'url';
-
 import ora from 'ora';
+
 export async function bundle(root: string) {
   const resolveViteConfig = (isServer: boolean): InlineConfig => ({
     mode: 'production',
     root,
-    // 注意加上这个插件，自动注入 import React from 'react'，避免 React is not defined 的错误
-    plugins: [pluginReact()],
     build: {
       ssr: isServer,
       outDir: isServer ? '.temp' : 'build',
@@ -25,7 +20,9 @@ export async function bundle(root: string) {
       }
     }
   });
-  console.log('Building client + server bundles...');
+  const spinner = ora();
+
+  // spinner.start(`Building client + server bundles...`);
 
   try {
     const [clientBundle, serverBundle] = await Promise.all([
@@ -47,33 +44,34 @@ export async function renderPage(
 ) {
   const clientChunk = clientBundle.output.find(
     (chunk) => chunk.type === 'chunk' && chunk.isEntry
-  ); // 客户端 entry chunk
-  console.log('rendering page in server side');
-  const appHtml = render(); // server端返回html字符串
-  // cilent端导入js脚本
+  );
+  console.log('Rendering page in server side...');
+  const appHtml = render();
   const html = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>title</title>
-      <meta name="description" content="xxx">
-    </head>
-    <body>
-      <div id="root">${appHtml}</div>
-      <script type="module" src="./${clientChunk?.fileName}"></script>
-    </body>
-  </html>`.trim();
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>title</title>
+    <meta name="description" content="xxx">
+  </head>
+  <body>
+    <div id="root">${appHtml}</div>
+    <script type="module" src="/${clientChunk?.fileName}"></script>
+  </body>
+</html>`.trim();
   await fs.ensureDir(join(root, 'build'));
   await fs.writeFile(join(root, 'build/index.html'), html);
   await fs.remove(join(root, '.temp'));
 }
 
 export async function build(root: string = process.cwd()) {
-  const [clientBundle, serverBundle] = await bundle(root);
-  const serverEntryPath = resolve(root, '.temp', 'ssr-entry.js');
-  // const { render } = require(serverEntryPath);
-  const { render } = await import(pathToFileURL(serverEntryPath).toString()); // 渲染html函数
+  // 1. bundle - client 端 + server 端
+  const [clientBundle] = await bundle(root);
+  // 2. 引入 server-entry 模块
+  const serverEntryPath = join(root, '.temp', 'ssr-entry.js');
+  const { render } = await import(serverEntryPath);
+  // 3. 服务端渲染，产出 HTML
   await renderPage(render, root, clientBundle);
 }
