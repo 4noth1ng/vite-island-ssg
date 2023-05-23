@@ -1,4 +1,8 @@
-"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/node/cli.ts
+"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+
+var _chunkLLGGJ6LIjs = require('./chunk-LLGGJ6LI.js');
+
+// src/node/cli.ts
 var _cac = require('cac'); var _cac2 = _interopRequireDefault(_cac);
 var _path = require('path');
 
@@ -123,46 +127,31 @@ function pluginIndexHtml() {
 // src/node/dev.ts
 var _pluginreact = require('@vitejs/plugin-react'); var _pluginreact2 = _interopRequireDefault(_pluginreact);
 
-// src/node/config.ts
-
-
-
-function getUserConfigPath(root) {
-  try {
-    const supportConfigFiles = ["config.ts", "config.js"];
-    const configPath = supportConfigFiles.map((file) => _path.resolve.call(void 0, root, file)).find(_fsextra2.default.pathExistsSync);
-    return configPath;
-  } catch (e) {
-    console.error(`Failed to load user config: ${e}`);
-    throw e;
-  }
-}
-async function resolveConfig(root, command, mode) {
-  const configPath = getUserConfigPath(root);
-  const result = await _vite.loadConfigFromFile.call(void 0, 
-    {
-      command,
-      mode
+// src/node/plugin-island/config.ts
+var SITE_DATA_ID = "island:site-data";
+function pluginConfig(config) {
+  return {
+    name: "island:config",
+    resolveId(id) {
+      if (id === SITE_DATA_ID) {
+        return "\0" + SITE_DATA_ID;
+      }
     },
-    configPath,
-    root
-  );
-  if (result) {
-    const { config: rawConfig = {} } = result;
-    const userConfig = await (typeof rawConfig === "function" ? rawConfig() : rawConfig);
-    return [configPath, userConfig];
-  } else {
-    return [configPath, {}];
-  }
+    load(id) {
+      if (id === "\0" + SITE_DATA_ID) {
+        return `export default ${JSON.stringify(config.siteData)}`;
+      }
+    }
+  };
 }
 
 // src/node/dev.ts
 async function createDevServer(root) {
-  const config = await resolveConfig(root, "serve", "development");
+  const config = await _chunkLLGGJ6LIjs.resolveConfig.call(void 0, root, "serve", "development");
   console.log(config);
   return _vite.createServer.call(void 0, {
     root,
-    plugins: [pluginIndexHtml(), _pluginreact2.default.call(void 0, )],
+    plugins: [pluginIndexHtml(), _pluginreact2.default.call(void 0, ), pluginConfig(config)],
     server: {
       fs: {
         allow: [PACKAGE_ROOT]

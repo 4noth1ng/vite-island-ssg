@@ -3,13 +3,15 @@ import { pluginIndexHtml } from './plugin-island/indexHtml';
 import pluginReact from '@vitejs/plugin-react';
 import { PACKAGE_ROOT } from './constants';
 import { resolveConfig } from './config';
+import { pluginConfig } from './plugin-island/config';
 
 export async function createDevServer(root: string) {
   const config = await resolveConfig(root, 'serve', 'development');
   console.log(config);
+  // 创建本地server
   return createServer({
     root,
-    plugins: [pluginIndexHtml(), pluginReact()],
+    plugins: [pluginIndexHtml(), pluginReact(), pluginConfig(config)],
     server: {
       fs: {
         allow: [PACKAGE_ROOT]
