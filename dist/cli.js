@@ -1,6 +1,7 @@
 "use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 
-var _chunkLLGGJ6LIjs = require('./chunk-LLGGJ6LI.js');
+
+var _chunkKW5LJDZWjs = require('./chunk-KW5LJDZW.js');
 
 // src/node/cli.ts
 var _cac = require('cac'); var _cac2 = _interopRequireDefault(_cac);
@@ -8,16 +9,6 @@ var _path = require('path');
 
 // src/node/build.ts
 var _vite = require('vite');
-
-// src/node/constants/index.ts
-
-var PACKAGE_ROOT = _path.join.call(void 0, __dirname, "..");
-var RUNTIME_PATH = _path.join.call(void 0, PACKAGE_ROOT, "src", "runtime");
-var CLIENT_ENTRY_PATH = _path.join.call(void 0, RUNTIME_PATH, "client-entry.tsx");
-var SERVER_ENTRY_PATH = _path.join.call(void 0, RUNTIME_PATH, "ssr-entry.tsx");
-var DEFAULT_HTML_PATH = _path.join.call(void 0, PACKAGE_ROOT, "template.html");
-
-// src/node/build.ts
 
 var _fsextra = require('fs-extra'); var _fsextra2 = _interopRequireDefault(_fsextra);
 var _ora = require('ora'); var _ora2 = _interopRequireDefault(_ora);
@@ -29,7 +20,7 @@ async function bundle(root) {
       ssr: isServer,
       outDir: isServer ? ".temp" : "build",
       rollupOptions: {
-        input: isServer ? SERVER_ENTRY_PATH : CLIENT_ENTRY_PATH,
+        input: isServer ? _chunkKW5LJDZWjs.SERVER_ENTRY_PATH : _chunkKW5LJDZWjs.CLIENT_ENTRY_PATH,
         output: {
           format: isServer ? "cjs" : "esm"
         }
@@ -78,94 +69,19 @@ async function build(root = process.cwd()) {
   await renderPage(render, root, clientBundle);
 }
 
-// src/node/dev.ts
-
-
-// src/node/plugin-island/indexHtml.ts
-
-function pluginIndexHtml() {
-  return {
-    name: "island:index-html",
-    apply: "serve",
-    transformIndexHtml(html) {
-      return {
-        html,
-        tags: [
-          {
-            tag: "script",
-            attrs: {
-              type: "module",
-              src: `/@fs/${CLIENT_ENTRY_PATH}`
-            },
-            injectTo: "body"
-          }
-        ]
-      };
-    },
-    configureServer(server) {
-      return () => {
-        server.middlewares.use(async (req, res, next) => {
-          let html = await _fsextra2.default.readFile(DEFAULT_HTML_PATH, "utf-8");
-          try {
-            html = await server.transformIndexHtml(
-              req.url,
-              html,
-              req.originalUrl
-            );
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "text/html");
-            res.end(html);
-          } catch (e) {
-            return next(e);
-          }
-        });
-      };
-    }
-  };
-}
-
-// src/node/dev.ts
-var _pluginreact = require('@vitejs/plugin-react'); var _pluginreact2 = _interopRequireDefault(_pluginreact);
-
-// src/node/plugin-island/config.ts
-var SITE_DATA_ID = "island:site-data";
-function pluginConfig(config) {
-  return {
-    name: "island:config",
-    resolveId(id) {
-      if (id === SITE_DATA_ID) {
-        return "\0" + SITE_DATA_ID;
-      }
-    },
-    load(id) {
-      if (id === "\0" + SITE_DATA_ID) {
-        return `export default ${JSON.stringify(config.siteData)}`;
-      }
-    }
-  };
-}
-
-// src/node/dev.ts
-async function createDevServer(root) {
-  const config = await _chunkLLGGJ6LIjs.resolveConfig.call(void 0, root, "serve", "development");
-  console.log(config);
-  return _vite.createServer.call(void 0, {
-    root,
-    plugins: [pluginIndexHtml(), _pluginreact2.default.call(void 0, ), pluginConfig(config)],
-    server: {
-      fs: {
-        allow: [PACKAGE_ROOT]
-      }
-    }
-  });
-}
-
 // src/node/cli.ts
 var cli = _cac2.default.call(void 0, "island").version("0.0.1").help();
 cli.command("dev [root]", "start dev server").action(async (root) => {
-  const server = await createDevServer(root);
-  await server.listen();
-  server.printUrls();
+  const createServer = async () => {
+    const { createDevServer } = await Promise.resolve().then(() => require("./dev.js"));
+    const server = await createDevServer(root, async () => {
+      await server.close();
+      await createServer();
+    });
+    await server.listen();
+    server.printUrls();
+  };
+  await createServer();
 });
 cli.command("build [root]", "build in production").action(async (root) => {
   try {

@@ -1,7 +1,8 @@
 import {
-  __dirname,
-  resolveConfig
-} from "./chunk-YSRQHKS5.mjs";
+  CLIENT_ENTRY_PATH,
+  SERVER_ENTRY_PATH
+} from "./chunk-Q2C6A4H7.mjs";
+import "./chunk-QMEAT3LQ.mjs";
 
 // src/node/cli.ts
 import cac from "cac";
@@ -9,17 +10,7 @@ import { resolve } from "path";
 
 // src/node/build.ts
 import { build as viteBuild } from "vite";
-
-// src/node/constants/index.ts
 import { join } from "path";
-var PACKAGE_ROOT = join(__dirname, "..");
-var RUNTIME_PATH = join(PACKAGE_ROOT, "src", "runtime");
-var CLIENT_ENTRY_PATH = join(RUNTIME_PATH, "client-entry.tsx");
-var SERVER_ENTRY_PATH = join(RUNTIME_PATH, "ssr-entry.tsx");
-var DEFAULT_HTML_PATH = join(PACKAGE_ROOT, "template.html");
-
-// src/node/build.ts
-import { join as join2 } from "path";
 import fs from "fs-extra";
 import ora from "ora";
 async function bundle(root) {
@@ -68,105 +59,30 @@ async function renderPage(render, root, clientBundle) {
     <script type="module" src="/${clientChunk?.fileName}"><\/script>
   </body>
 </html>`.trim();
-  await fs.ensureDir(join2(root, "build"));
-  await fs.writeFile(join2(root, "build/index.html"), html);
-  await fs.remove(join2(root, ".temp"));
+  await fs.ensureDir(join(root, "build"));
+  await fs.writeFile(join(root, "build/index.html"), html);
+  await fs.remove(join(root, ".temp"));
 }
 async function build(root = process.cwd()) {
   const [clientBundle] = await bundle(root);
-  const serverEntryPath = join2(root, ".temp", "ssr-entry.js");
+  const serverEntryPath = join(root, ".temp", "ssr-entry.js");
   const { render } = await import(serverEntryPath);
   await renderPage(render, root, clientBundle);
-}
-
-// src/node/dev.ts
-import { createServer } from "vite";
-
-// src/node/plugin-island/indexHtml.ts
-import fs2 from "fs-extra";
-function pluginIndexHtml() {
-  return {
-    name: "island:index-html",
-    apply: "serve",
-    transformIndexHtml(html) {
-      return {
-        html,
-        tags: [
-          {
-            tag: "script",
-            attrs: {
-              type: "module",
-              src: `/@fs/${CLIENT_ENTRY_PATH}`
-            },
-            injectTo: "body"
-          }
-        ]
-      };
-    },
-    configureServer(server) {
-      return () => {
-        server.middlewares.use(async (req, res, next) => {
-          let html = await fs2.readFile(DEFAULT_HTML_PATH, "utf-8");
-          try {
-            html = await server.transformIndexHtml(
-              req.url,
-              html,
-              req.originalUrl
-            );
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "text/html");
-            res.end(html);
-          } catch (e) {
-            return next(e);
-          }
-        });
-      };
-    }
-  };
-}
-
-// src/node/dev.ts
-import pluginReact from "@vitejs/plugin-react";
-
-// src/node/plugin-island/config.ts
-var SITE_DATA_ID = "island:site-data";
-function pluginConfig(config) {
-  return {
-    name: "island:config",
-    resolveId(id) {
-      if (id === SITE_DATA_ID) {
-        return "\0" + SITE_DATA_ID;
-      }
-    },
-    load(id) {
-      if (id === "\0" + SITE_DATA_ID) {
-        return `export default ${JSON.stringify(config.siteData)}`;
-      }
-    }
-  };
-}
-
-// src/node/dev.ts
-async function createDevServer(root) {
-  const config = await resolveConfig(root, "serve", "development");
-  console.log(config);
-  return createServer({
-    root,
-    plugins: [pluginIndexHtml(), pluginReact(), pluginConfig(config)],
-    server: {
-      fs: {
-        allow: [PACKAGE_ROOT]
-      }
-    }
-  });
 }
 
 // src/node/cli.ts
 var cli = cac("island").version("0.0.1").help();
 cli.command("dev [root]", "start dev server").action(async (root) => {
-  const server = await createDevServer(root);
-  await server.listen();
-  server.printUrls();
+  const createServer = async () => {
+    const { createDevServer } = await import("./dev.mjs");
+    const server = await createDevServer(root, async () => {
+      await server.close();
+      await createServer();
+    });
+    await server.listen();
+    server.printUrls();
+  };
+  await createServer();
 });
 cli.command("build [root]", "build in production").action(async (root) => {
   try {
