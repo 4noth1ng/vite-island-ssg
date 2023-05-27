@@ -2,10 +2,10 @@ import {
   CLIENT_ENTRY_PATH,
   SERVER_ENTRY_PATH,
   createVitePlugins
-} from "./chunk-ZWLGUGJQ.mjs";
+} from "./chunk-DOM2TQ5W.mjs";
 import {
   resolveConfig
-} from "./chunk-ECJZXT62.mjs";
+} from "./chunk-7GCQGGGO.mjs";
 
 // src/node/cli.ts
 import cac from "cac";
@@ -13,20 +13,20 @@ import { resolve } from "path";
 
 // src/node/build.ts
 import { build as viteBuild } from "vite";
-import path, { join } from "path";
+import path, { dirname, join } from "path";
 import fs from "fs-extra";
 async function bundle(root, config) {
   const resolveViteConfig = async (isServer) => ({
     mode: "production",
     root,
-    plugins: await createVitePlugins(config),
+    plugins: await createVitePlugins(config, void 0, isServer),
     ssr: {
       noExternal: ["react-router-dom"]
     },
     build: {
       minify: false,
       ssr: isServer,
-      outDir: isServer ? path.join(root, ".temp") : "build",
+      outDir: isServer ? path.join(root, ".temp") : path.join(root, "build"),
       rollupOptions: {
         input: isServer ? SERVER_ENTRY_PATH : CLIENT_ENTRY_PATH,
         output: {
@@ -45,13 +45,16 @@ async function bundle(root, config) {
     console.log(e);
   }
 }
-async function renderPage(render, root, clientBundle) {
+async function renderPages(render, routes, root, clientBundle) {
+  console.log("Rendering page in server side...");
   const clientChunk = clientBundle.output.find(
     (chunk) => chunk.type === "chunk" && chunk.isEntry
   );
-  console.log("Rendering page in server side...");
-  const appHtml = render();
-  const html = `
+  return Promise.all(
+    routes.map(async (route) => {
+      const routePath = route.path;
+      const appHtml = render(routePath);
+      const html = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -65,16 +68,18 @@ async function renderPage(render, root, clientBundle) {
     <script type="module" src="/${clientChunk?.fileName}"><\/script>
   </body>
 </html>`.trim();
-  await fs.ensureDir(join(root, "build"));
-  await fs.writeFile(join(root, "build/index.html"), html);
-  await fs.remove(join(root, ".temp"));
+      const fileName = routePath.endsWith("/") ? `${routePath}index.html` : `${routePath}.html`;
+      await fs.ensureDir(join(root, "build", dirname(fileName)));
+      await fs.writeFile(join(root, "build", fileName), html);
+    })
+  );
 }
 async function build(root = process.cwd(), config) {
   const [clientBundle] = await bundle(root, config);
   const serverEntryPath = join(root, ".temp", "ssr-entry.js");
-  const { render } = await import(serverEntryPath);
+  const { render, routes } = await import(serverEntryPath);
   try {
-    await renderPage(render, root, clientBundle);
+    await renderPages(render, routes, root, clientBundle);
   } catch (e) {
     console.log("Render page error.\n", e);
   }
