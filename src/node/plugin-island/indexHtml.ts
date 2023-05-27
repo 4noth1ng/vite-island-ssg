@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises';
+import fs from 'fs-extra';
 import { Plugin } from 'vite';
 import { CLIENT_ENTRY_PATH, DEFAULT_HTML_PATH } from '../constants';
 
@@ -25,10 +25,9 @@ export function pluginIndexHtml(): Plugin {
     configureServer(server) {
       return () => {
         server.middlewares.use(async (req, res, next) => {
-          let html = await readFile(DEFAULT_HTML_PATH, 'utf-8');
+          let html = await fs.readFile(DEFAULT_HTML_PATH, 'utf-8');
 
           try {
-            // 执行所有插件 的 transformIndexHtml
             html = await server.transformIndexHtml(
               req.url,
               html,

@@ -1,9 +1,12 @@
 import { App } from './app';
 import { renderToString } from 'react-dom/server';
+import { StaticRouter } from 'react-router-dom/server';
 
 // For ssr component render
-// 服务端入口 将组件渲染成HTML字符串
-
 export function render() {
-  return renderToString(<App />);
+  return renderToString(
+    <StaticRouter location={'/guide'}>
+      <App />
+    </StaticRouter>
+  );
 }
