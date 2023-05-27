@@ -2,7 +2,7 @@
 
 
 
-var _chunkF2VJV6ZGjs = require('./chunk-F2VJV6ZG.js');
+var _chunkSWTRQRZ2js = require('./chunk-SWTRQRZ2.js');
 
 
 var _chunk4N4EYNOUjs = require('./chunk-4N4EYNOU.js');
@@ -15,12 +15,11 @@ var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 var _vite = require('vite');
 
 var _fsextra = require('fs-extra'); var _fsextra2 = _interopRequireDefault(_fsextra);
-var _pluginreact = require('@vitejs/plugin-react'); var _pluginreact2 = _interopRequireDefault(_pluginreact);
 async function bundle(root, config) {
-  const resolveViteConfig = (isServer) => ({
+  const resolveViteConfig = async (isServer) => ({
     mode: "production",
     root,
-    plugins: [_pluginreact2.default.call(void 0, ), _chunkF2VJV6ZGjs.pluginConfig.call(void 0, config)],
+    plugins: await _chunkSWTRQRZ2js.createVitePlugins.call(void 0, config),
     ssr: {
       noExternal: ["react-router-dom"]
     },
@@ -29,7 +28,7 @@ async function bundle(root, config) {
       ssr: isServer,
       outDir: isServer ? _path2.default.join(root, ".temp") : "build",
       rollupOptions: {
-        input: isServer ? _chunkF2VJV6ZGjs.SERVER_ENTRY_PATH : _chunkF2VJV6ZGjs.CLIENT_ENTRY_PATH,
+        input: isServer ? _chunkSWTRQRZ2js.SERVER_ENTRY_PATH : _chunkSWTRQRZ2js.CLIENT_ENTRY_PATH,
         output: {
           format: isServer ? "cjs" : "esm"
         }
@@ -38,8 +37,8 @@ async function bundle(root, config) {
   });
   try {
     const [clientBundle, serverBundle] = await Promise.all([
-      _vite.build.call(void 0, resolveViteConfig(false)),
-      _vite.build.call(void 0, resolveViteConfig(true))
+      _vite.build.call(void 0, await resolveViteConfig(false)),
+      _vite.build.call(void 0, await resolveViteConfig(true))
     ]);
     return [clientBundle, serverBundle];
   } catch (e) {
