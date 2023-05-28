@@ -2,7 +2,7 @@
 
 
 
-var _chunkBMRRBKK2js = require('./chunk-BMRRBKK2.js');
+var _chunkIFUXLDZBjs = require('./chunk-IFUXLDZB.js');
 
 
 var _chunk4N4EYNOUjs = require('./chunk-4N4EYNOU.js');
@@ -19,7 +19,7 @@ async function bundle(root, config) {
   const resolveViteConfig = async (isServer) => ({
     mode: "production",
     root,
-    plugins: await _chunkBMRRBKK2js.createVitePlugins.call(void 0, config, void 0, isServer),
+    plugins: await _chunkIFUXLDZBjs.createVitePlugins.call(void 0, config, void 0, isServer),
     ssr: {
       noExternal: ["react-router-dom"]
     },
@@ -28,7 +28,7 @@ async function bundle(root, config) {
       ssr: isServer,
       outDir: isServer ? _path2.default.join(root, ".temp") : _path2.default.join(root, "build"),
       rollupOptions: {
-        input: isServer ? _chunkBMRRBKK2js.SERVER_ENTRY_PATH : _chunkBMRRBKK2js.CLIENT_ENTRY_PATH,
+        input: isServer ? _chunkIFUXLDZBjs.SERVER_ENTRY_PATH : _chunkIFUXLDZBjs.CLIENT_ENTRY_PATH,
         output: {
           format: isServer ? "cjs" : "esm"
         }

@@ -55,6 +55,9 @@ dependencies:
   shiki:
     specifier: ^0.11.1
     version: 0.11.1
+  sirv:
+    specifier: ^2.0.3
+    version: registry.npmmirror.com/sirv@2.0.3
   unocss:
     specifier: ^0.52.4
     version: registry.npmmirror.com/unocss@0.52.4(postcss@8.4.23)(rollup@3.2.3)(vite@3.1.4)
@@ -2924,7 +2927,7 @@ packages:
     name: '@vitest/ui'
     version: 0.25.2
     dependencies:
-      sirv: registry.npmmirror.com/sirv@2.0.2
+      sirv: registry.npmmirror.com/sirv@2.0.3
     dev: true
 
   registry.npmmirror.com/@zeit/schemas@2.21.0:
@@ -6558,17 +6561,6 @@ packages:
     name: signal-exit
     version: 3.0.7
 
-  registry.npmmirror.com/sirv@2.0.2:
-    resolution: {integrity: sha512-4Qog6aE29nIjAOKe/wowFTxOdmbEZKb+3tsLljaBRzJwtqto0BChD2zzH0LhgCSXiI+V7X+Y45v14wBZQ1TK3w==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/sirv/-/sirv-2.0.2.tgz}
-    name: sirv
-    version: 2.0.2
-    engines: {node: '>= 10'}
-    dependencies:
-      '@polka/url': registry.npmmirror.com/@polka/url@1.0.0-next.21
-      mrmime: registry.npmmirror.com/mrmime@1.0.1
-      totalist: registry.npmmirror.com/totalist@3.0.0
-    dev: true
-
   registry.npmmirror.com/sirv@2.0.3:
     resolution: {integrity: sha512-O9jm9BsID1P+0HOi81VpXPoDxYP374pkOLzACAoyUQ/3OUVndNpsz6wMnY2z+yOxzbllCKZrM+9QrWsv4THnyA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/sirv/-/sirv-2.0.3.tgz}
     name: sirv
@@ -6578,7 +6570,6 @@ packages:
       '@polka/url': registry.npmmirror.com/@polka/url@1.0.0-next.21
       mrmime: registry.npmmirror.com/mrmime@1.0.1
       totalist: registry.npmmirror.com/totalist@3.0.0
-    dev: false
 
   registry.npmmirror.com/slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/slash/-/slash-3.0.0.tgz}
