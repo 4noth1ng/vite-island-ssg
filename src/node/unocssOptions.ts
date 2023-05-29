@@ -3,6 +3,9 @@ import { presetAttributify, presetWind, presetIcons } from 'unocss';
 
 const options: VitePluginConfig = {
   presets: [presetAttributify(), presetWind({}), presetIcons()],
+  shortcuts: {
+    'flex-center': 'flex justify-center items-center'
+  },
   rules: [
     [
       /^divider-(\w+)$/,
@@ -22,9 +25,6 @@ const options: VitePluginConfig = {
       }
     ]
   ],
-  shortcuts: {
-    'flex-center': 'flex justify-center items-center'
-  },
   theme: {
     colors: {
       brandLight: 'var(--island-c-brand-light)',

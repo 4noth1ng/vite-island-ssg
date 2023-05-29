@@ -2,7 +2,7 @@ import {
   CLIENT_ENTRY_PATH,
   SERVER_ENTRY_PATH,
   createVitePlugins
-} from "./chunk-BYK5BC5I.mjs";
+} from "./chunk-POPXC3JX.mjs";
 import {
   resolveConfig
 } from "./chunk-7GCQGGGO.mjs";

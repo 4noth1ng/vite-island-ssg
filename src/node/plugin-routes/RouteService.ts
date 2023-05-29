@@ -28,7 +28,6 @@ export class RouteService {
       );
       // 1. 路由路径
       const routePath = this.normalizeRoutePath(fileRelativePath);
-
       // 2. 文件绝对路径
       this.#routeData.push({
         routePath,
