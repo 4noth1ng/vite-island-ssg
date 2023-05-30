@@ -2,7 +2,7 @@
 
 
 
-var _chunkCW2VYTG6js = require('./chunk-CW2VYTG6.js');
+var _chunkSN3GQPLHjs = require('./chunk-SN3GQPLH.js');
 
 
 var _chunk4N4EYNOUjs = require('./chunk-4N4EYNOU.js');
@@ -19,16 +19,16 @@ async function bundle(root, config) {
   const resolveViteConfig = async (isServer) => ({
     mode: "production",
     root,
-    plugins: await _chunkCW2VYTG6js.createVitePlugins.call(void 0, config, void 0, isServer),
+    plugins: await _chunkSN3GQPLHjs.createVitePlugins.call(void 0, config, void 0, isServer),
     ssr: {
-      noExternal: ["react-router-dom"]
+      noExternal: ["react-router-dom", "lodash-es"]
     },
     build: {
       minify: false,
       ssr: isServer,
       outDir: isServer ? _path2.default.join(root, ".temp") : _path2.default.join(root, "build"),
       rollupOptions: {
-        input: isServer ? _chunkCW2VYTG6js.SERVER_ENTRY_PATH : _chunkCW2VYTG6js.CLIENT_ENTRY_PATH,
+        input: isServer ? _chunkSN3GQPLHjs.SERVER_ENTRY_PATH : _chunkSN3GQPLHjs.CLIENT_ENTRY_PATH,
         output: {
           format: isServer ? "cjs" : "esm"
         }
@@ -53,7 +53,7 @@ async function renderPages(render, routes, root, clientBundle) {
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
-      const appHtml = render(routePath);
+      const appHtml = await render(routePath);
       const html = `
 <!DOCTYPE html>
 <html>
@@ -77,7 +77,8 @@ async function renderPages(render, routes, root, clientBundle) {
 async function build(root = process.cwd(), config) {
   const [clientBundle] = await bundle(root, config);
   const serverEntryPath = _path.join.call(void 0, root, ".temp", "ssr-entry.js");
-  const { render, routes } = await Promise.resolve().then(() => require(serverEntryPath));
+  const url = new URL(`file://${_path2.default.resolve(serverEntryPath)}`);
+  const { render, routes } = await Promise.resolve().then(() => require(url.href));
   try {
     await renderPages(render, routes, root, clientBundle);
   } catch (e) {

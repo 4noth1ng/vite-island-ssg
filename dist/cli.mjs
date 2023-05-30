@@ -2,10 +2,10 @@ import {
   CLIENT_ENTRY_PATH,
   SERVER_ENTRY_PATH,
   createVitePlugins
-} from "./chunk-POPXC3JX.mjs";
+} from "./chunk-K2M5FOXB.mjs";
 import {
   resolveConfig
-} from "./chunk-7GCQGGGO.mjs";
+} from "./chunk-ECJZXT62.mjs";
 
 // src/node/cli.ts
 import cac from "cac";
@@ -21,7 +21,7 @@ async function bundle(root, config) {
     root,
     plugins: await createVitePlugins(config, void 0, isServer),
     ssr: {
-      noExternal: ["react-router-dom"]
+      noExternal: ["react-router-dom", "lodash-es"]
     },
     build: {
       minify: false,
@@ -53,7 +53,7 @@ async function renderPages(render, routes, root, clientBundle) {
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
-      const appHtml = render(routePath);
+      const appHtml = await render(routePath);
       const html = `
 <!DOCTYPE html>
 <html>
@@ -77,7 +77,8 @@ async function renderPages(render, routes, root, clientBundle) {
 async function build(root = process.cwd(), config) {
   const [clientBundle] = await bundle(root, config);
   const serverEntryPath = join(root, ".temp", "ssr-entry.js");
-  const { render, routes } = await import(serverEntryPath);
+  const url = new URL(`file://${path.resolve(serverEntryPath)}`);
+  const { render, routes } = await import(url.href);
   try {
     await renderPages(render, routes, root, clientBundle);
   } catch (e) {

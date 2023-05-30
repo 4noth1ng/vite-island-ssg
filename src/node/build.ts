@@ -16,7 +16,7 @@ export async function bundle(root: string, config: SiteConfig) {
     root,
     plugins: await createVitePlugins(config, undefined, isServer),
     ssr: {
-      noExternal: ['react-router-dom']
+      noExternal: ['react-router-dom', 'lodash-es']
     },
     build: {
       minify: false,
@@ -59,7 +59,7 @@ export async function renderPages(
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
-      const appHtml = render(routePath);
+      const appHtml = await render(routePath);
       const html = `
 <!DOCTYPE html>
 <html>
@@ -88,7 +88,8 @@ export async function build(root: string = process.cwd(), config: SiteConfig) {
   const [clientBundle] = await bundle(root, config);
   // 2. 引入 server-entry 模块
   const serverEntryPath = join(root, '.temp', 'ssr-entry.js');
-  const { render, routes } = await import(serverEntryPath);
+  const url = new URL(`file://${path.resolve(serverEntryPath)}`);
+  const { render, routes } = await import(url.href);
   // 3. 服务端渲染，产出 HTML
   try {
     await renderPages(render, routes, root, clientBundle);
