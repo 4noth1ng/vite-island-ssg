@@ -2,7 +2,7 @@
 
 
 
-var _chunkSN3GQPLHjs = require('./chunk-SN3GQPLH.js');
+var _chunkPCICH4YUjs = require('./chunk-PCICH4YU.js');
 
 
 var _chunk4N4EYNOUjs = require('./chunk-4N4EYNOU.js');
@@ -19,7 +19,7 @@ async function bundle(root, config) {
   const resolveViteConfig = async (isServer) => ({
     mode: "production",
     root,
-    plugins: await _chunkSN3GQPLHjs.createVitePlugins.call(void 0, config, void 0, isServer),
+    plugins: await _chunkPCICH4YUjs.createVitePlugins.call(void 0, config, void 0, isServer),
     ssr: {
       noExternal: ["react-router-dom", "lodash-es"]
     },
@@ -28,7 +28,7 @@ async function bundle(root, config) {
       ssr: isServer,
       outDir: isServer ? _path2.default.join(root, ".temp") : _path2.default.join(root, "build"),
       rollupOptions: {
-        input: isServer ? _chunkSN3GQPLHjs.SERVER_ENTRY_PATH : _chunkSN3GQPLHjs.CLIENT_ENTRY_PATH,
+        input: isServer ? _chunkPCICH4YUjs.SERVER_ENTRY_PATH : _chunkPCICH4YUjs.CLIENT_ENTRY_PATH,
         output: {
           format: isServer ? "cjs" : "esm"
         }
