@@ -68,7 +68,39 @@
     SSR 同构：即服务端和客户端能执行相同的代码，现代 SSR 的流程是：服务端提供完整的 HTML，然后请求 JS 脚本并执行（状态管理、路由跳转、交互相关），对比 SPA，SPA 的 html 通过 JS 脚本执行渲染，所以白屏时间会更长，但从网络 IO 的角度讲，两者并无大的区别
     islands 架构：孤岛架构，这种架构的前提是只有部分可交互组件，比起 SSR 同构，优点在于无需执行全量的注水操作。
 
-18. 打包 islands 组件代码
+18. 实现 island 组件的标记
+
+首先使用`__island`prop 标记 island 的组件
+import { Aside } from '../components/Aside';
+
+export function Layout() {
+return <Aside __island />;
+}
+然后使用 babel 进行转化
+// 转换前
+
+<Aside __island />
+
+// 转换后
+
+<Aside __island="../comp/id.ts!!ISLAND!!/User/import.ts" />
+最后达到
+
+```
+import { Aside } from '../components/Aside';
+
+export function Layout() {
+  return <Aside __island="/Users/project/src/components/Aside.tsx" />;
+}
+```
+
+这样我们就能记录下所有 island 组件的路径信息，从而进行打包，形成 island bundle，并将组件挂载到 window 对象上
+
+因此，我们需要两个插件，一个是 babel 插件，完成编译时 island 组件路径信息的注入
+另一个是运行时插件，拦截 Islands 组件，记录 island 组件的路径以及内容
+最后将其单独打包，挂载到全局对象上，并注入到 html 中
+
+19. 打包 islands 组件代码
     首先根据标记以及标记组件的信息进行拼接，比如将```ts
     {
     Aside: 'some-path'

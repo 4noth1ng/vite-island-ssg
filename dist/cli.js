@@ -16,6 +16,7 @@ var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 var _vite = require('vite');
 
 var _fsextra = require('fs-extra'); var _fsextra2 = _interopRequireDefault(_fsextra);
+var CLIENT_OUTPUT = "build";
 async function bundle(root, config) {
   const resolveViteConfig = async (isServer) => ({
     mode: "production",
@@ -27,7 +28,7 @@ async function bundle(root, config) {
     build: {
       minify: false,
       ssr: isServer,
-      outDir: isServer ? _path2.default.join(root, ".temp") : _path2.default.join(root, "build"),
+      outDir: isServer ? _path2.default.join(root, ".temp") : _path2.default.join(root, CLIENT_OUTPUT),
       rollupOptions: {
         input: isServer ? _chunk7AW3HBADjs.SERVER_ENTRY_PATH : _chunk7AW3HBADjs.CLIENT_ENTRY_PATH,
         output: {
@@ -41,6 +42,10 @@ async function bundle(root, config) {
       _vite.build.call(void 0, await resolveViteConfig(false)),
       _vite.build.call(void 0, await resolveViteConfig(true))
     ]);
+    const publicDir = _path.join.call(void 0, root, "public");
+    if (_fsextra2.default.pathExistsSync(publicDir)) {
+      await _fsextra2.default.copy(publicDir, _path.join.call(void 0, root, CLIENT_OUTPUT));
+    }
     return [clientBundle, serverBundle];
   } catch (e) {
     console.log(e);
@@ -54,8 +59,16 @@ async function renderPages(render, routes, root, clientBundle) {
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
-      const { appHtml, islandToPathMap, propsData } = await render(routePath);
-      await buildIslands(root, islandToPathMap);
+      const {
+        appHtml,
+        islandToPathMap,
+        propsData = []
+      } = await render(routePath);
+      const styleAssets = clientBundle.output.filter(
+        (chunk) => chunk.type === "asset" && chunk.fileName.endsWith(".css")
+      );
+      const islandBundle = await buildIslands(root, islandToPathMap);
+      const islandsCode = islandBundle.output[0].code;
       const html = `
 <!DOCTYPE html>
 <html>
@@ -64,10 +77,13 @@ async function renderPages(render, routes, root, clientBundle) {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>title</title>
     <meta name="description" content="xxx">
+    ${styleAssets.map((item) => `<link rel="stylesheet" href="/${item.fileName}">`).join("\n")}
   </head>
   <body>
     <div id="root">${appHtml}</div>
+    <script type="module">${islandsCode}<\/script>
     <script type="module" src="/${_optionalChain([clientChunk, 'optionalAccess', _2 => _2.fileName])}"><\/script>
+    <script id="island-props">${JSON.stringify(propsData)}<\/script>
   </body>
 </html>`.trim();
       const fileName = routePath.endsWith("/") ? `${routePath}index.html` : `${routePath}.html`;
@@ -111,7 +127,6 @@ window.ISLAND_PROPS = JSON.parse(
         name: "island:inject",
         enforce: "post",
         resolveId(id) {
-          debugger;
           if (id.includes(_chunk7AW3HBADjs.MASK_SPLITTER)) {
             const [originId, importer] = id.split(_chunk7AW3HBADjs.MASK_SPLITTER);
             return this.resolve(originId, importer, { skipSelf: true });
