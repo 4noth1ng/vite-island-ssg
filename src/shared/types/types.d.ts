@@ -11,4 +11,3 @@ declare module 'island:routes' {
   import type { Route } from 'node/plugin-routes';
   export const routes: Route[];
 }
-
