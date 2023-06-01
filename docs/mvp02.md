@@ -67,3 +67,22 @@
     传统 SSR：服务端将所有 JS 执行完毕并注入 HTML 中，客户端只充当展示 HTML 文件的媒介
     SSR 同构：即服务端和客户端能执行相同的代码，现代 SSR 的流程是：服务端提供完整的 HTML，然后请求 JS 脚本并执行（状态管理、路由跳转、交互相关），对比 SPA，SPA 的 html 通过 JS 脚本执行渲染，所以白屏时间会更长，但从网络 IO 的角度讲，两者并无大的区别
     islands 架构：孤岛架构，这种架构的前提是只有部分可交互组件，比起 SSR 同构，优点在于无需执行全量的注水操作。
+
+18. 打包 islands 组件代码
+    首先根据标记以及标记组件的信息进行拼接，比如将```ts
+    {
+    Aside: 'some-path'
+    }
+
+````
+转化为
+    ```ts
+    import { Aside } from 'some-path';
+// 全局注册 Islands 组件
+window.ISLANDS = { Aside }
+// 注册 Islands 组件的 props 数据
+window.ISLAND_PROPS = JSON.parse(
+document.getElementById('island-props').textContent
+)
+
+````

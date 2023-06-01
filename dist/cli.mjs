@@ -1,8 +1,9 @@
 import {
   CLIENT_ENTRY_PATH,
+  MASK_SPLITTER,
   SERVER_ENTRY_PATH,
   createVitePlugins
-} from "./chunk-JLMZBVS7.mjs";
+} from "./chunk-35F43M6W.mjs";
 import {
   resolveConfig
 } from "./chunk-ECJZXT62.mjs";
@@ -53,7 +54,8 @@ async function renderPages(render, routes, root, clientBundle) {
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
-      const appHtml = await render(routePath);
+      const { appHtml, islandToPathMap, propsData } = await render(routePath);
+      await buildIslands(root, islandToPathMap);
       const html = `
 <!DOCTYPE html>
 <html>
@@ -84,6 +86,55 @@ async function build(root = process.cwd(), config) {
   } catch (e) {
     console.log("Render page error.\n", e);
   }
+}
+async function buildIslands(root, islandPathToMap) {
+  const islandsInjectCode = `
+    ${Object.entries(islandPathToMap).map(
+    ([islandName, islandPath]) => `import { ${islandName} } from '${islandPath}'`
+  ).join("")}
+window.ISLANDS = { ${Object.keys(islandPathToMap).join(", ")} };
+window.ISLAND_PROPS = JSON.parse(
+  document.getElementById('island-props').textContent
+);
+  `;
+  const injectId = "island:inject";
+  return viteBuild({
+    mode: "production",
+    build: {
+      outDir: path.join(root, ".temp"),
+      rollupOptions: {
+        input: injectId
+      }
+    },
+    plugins: [
+      {
+        name: "island:inject",
+        enforce: "post",
+        resolveId(id) {
+          debugger;
+          if (id.includes(MASK_SPLITTER)) {
+            const [originId, importer] = id.split(MASK_SPLITTER);
+            return this.resolve(originId, importer, { skipSelf: true });
+          }
+          if (id === injectId) {
+            return id;
+          }
+        },
+        load(id) {
+          if (id === injectId) {
+            return islandsInjectCode;
+          }
+        },
+        generateBundle(_, bundle2) {
+          for (const name in bundle2) {
+            if (bundle2[name].type === "asset") {
+              delete bundle2[name];
+            }
+          }
+        }
+      }
+    ]
+  });
 }
 
 // src/node/cli.ts

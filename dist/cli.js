@@ -2,7 +2,8 @@
 
 
 
-var _chunkPCICH4YUjs = require('./chunk-PCICH4YU.js');
+
+var _chunk7AW3HBADjs = require('./chunk-7AW3HBAD.js');
 
 
 var _chunk4N4EYNOUjs = require('./chunk-4N4EYNOU.js');
@@ -19,7 +20,7 @@ async function bundle(root, config) {
   const resolveViteConfig = async (isServer) => ({
     mode: "production",
     root,
-    plugins: await _chunkPCICH4YUjs.createVitePlugins.call(void 0, config, void 0, isServer),
+    plugins: await _chunk7AW3HBADjs.createVitePlugins.call(void 0, config, void 0, isServer),
     ssr: {
       noExternal: ["react-router-dom", "lodash-es"]
     },
@@ -28,7 +29,7 @@ async function bundle(root, config) {
       ssr: isServer,
       outDir: isServer ? _path2.default.join(root, ".temp") : _path2.default.join(root, "build"),
       rollupOptions: {
-        input: isServer ? _chunkPCICH4YUjs.SERVER_ENTRY_PATH : _chunkPCICH4YUjs.CLIENT_ENTRY_PATH,
+        input: isServer ? _chunk7AW3HBADjs.SERVER_ENTRY_PATH : _chunk7AW3HBADjs.CLIENT_ENTRY_PATH,
         output: {
           format: isServer ? "cjs" : "esm"
         }
@@ -53,7 +54,8 @@ async function renderPages(render, routes, root, clientBundle) {
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
-      const appHtml = await render(routePath);
+      const { appHtml, islandToPathMap, propsData } = await render(routePath);
+      await buildIslands(root, islandToPathMap);
       const html = `
 <!DOCTYPE html>
 <html>
@@ -65,7 +67,7 @@ async function renderPages(render, routes, root, clientBundle) {
   </head>
   <body>
     <div id="root">${appHtml}</div>
-    <script type="module" src="/${_optionalChain([clientChunk, 'optionalAccess', _ => _.fileName])}"><\/script>
+    <script type="module" src="/${_optionalChain([clientChunk, 'optionalAccess', _2 => _2.fileName])}"><\/script>
   </body>
 </html>`.trim();
       const fileName = routePath.endsWith("/") ? `${routePath}index.html` : `${routePath}.html`;
@@ -84,6 +86,55 @@ async function build(root = process.cwd(), config) {
   } catch (e) {
     console.log("Render page error.\n", e);
   }
+}
+async function buildIslands(root, islandPathToMap) {
+  const islandsInjectCode = `
+    ${Object.entries(islandPathToMap).map(
+    ([islandName, islandPath]) => `import { ${islandName} } from '${islandPath}'`
+  ).join("")}
+window.ISLANDS = { ${Object.keys(islandPathToMap).join(", ")} };
+window.ISLAND_PROPS = JSON.parse(
+  document.getElementById('island-props').textContent
+);
+  `;
+  const injectId = "island:inject";
+  return _vite.build.call(void 0, {
+    mode: "production",
+    build: {
+      outDir: _path2.default.join(root, ".temp"),
+      rollupOptions: {
+        input: injectId
+      }
+    },
+    plugins: [
+      {
+        name: "island:inject",
+        enforce: "post",
+        resolveId(id) {
+          debugger;
+          if (id.includes(_chunk7AW3HBADjs.MASK_SPLITTER)) {
+            const [originId, importer] = id.split(_chunk7AW3HBADjs.MASK_SPLITTER);
+            return this.resolve(originId, importer, { skipSelf: true });
+          }
+          if (id === injectId) {
+            return id;
+          }
+        },
+        load(id) {
+          if (id === injectId) {
+            return islandsInjectCode;
+          }
+        },
+        generateBundle(_, bundle2) {
+          for (const name in bundle2) {
+            if (bundle2[name].type === "asset") {
+              delete bundle2[name];
+            }
+          }
+        }
+      }
+    ]
+  });
 }
 
 // src/node/cli.ts
