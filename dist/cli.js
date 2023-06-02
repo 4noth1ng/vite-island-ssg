@@ -5,7 +5,7 @@
 
 
 
-var _chunk4YL7YWL5js = require('./chunk-4YL7YWL5.js');
+var _chunkQXXSIPNXjs = require('./chunk-QXXSIPNX.js');
 
 
 var _chunk4N4EYNOUjs = require('./chunk-4N4EYNOU.js');
@@ -23,7 +23,7 @@ async function bundle(root, config) {
   const resolveViteConfig = async (isServer) => ({
     mode: "production",
     root,
-    plugins: await _chunk4YL7YWL5js.createVitePlugins.call(void 0, config, void 0, isServer),
+    plugins: await _chunkQXXSIPNXjs.createVitePlugins.call(void 0, config, void 0, isServer),
     ssr: {
       noExternal: ["react-router-dom", "lodash-es"]
     },
@@ -32,11 +32,11 @@ async function bundle(root, config) {
       ssr: isServer,
       outDir: isServer ? _path2.default.join(root, ".temp") : _path2.default.join(root, CLIENT_OUTPUT),
       rollupOptions: {
-        input: isServer ? _chunk4YL7YWL5js.SERVER_ENTRY_PATH : _chunk4YL7YWL5js.CLIENT_ENTRY_PATH,
+        input: isServer ? _chunkQXXSIPNXjs.SERVER_ENTRY_PATH : _chunkQXXSIPNXjs.CLIENT_ENTRY_PATH,
         output: {
           format: isServer ? "cjs" : "esm"
         },
-        external: _chunk4YL7YWL5js.EXTERNALS
+        external: _chunkQXXSIPNXjs.EXTERNALS
       }
     }
   });
@@ -49,7 +49,7 @@ async function bundle(root, config) {
     if (_fsextra2.default.pathExistsSync(publicDir)) {
       await _fsextra2.default.copy(publicDir, _path.join.call(void 0, root, CLIENT_OUTPUT));
     }
-    await _fsextra2.default.copy(_path.join.call(void 0, _chunk4YL7YWL5js.PACKAGE_ROOT, "vendors"), _path.join.call(void 0, root, CLIENT_OUTPUT));
+    await _fsextra2.default.copy(_path.join.call(void 0, _chunkQXXSIPNXjs.PACKAGE_ROOT, "vendors"), _path.join.call(void 0, root, CLIENT_OUTPUT));
     return [clientBundle, serverBundle];
   } catch (e) {
     console.log(e);
@@ -75,7 +75,7 @@ window.ISLAND_PROPS = JSON.parse(
       outDir: _path2.default.join(root, ".temp"),
       rollupOptions: {
         input: injectId,
-        external: _chunk4YL7YWL5js.EXTERNALS
+        external: _chunkQXXSIPNXjs.EXTERNALS
       }
     },
     plugins: [
@@ -83,8 +83,8 @@ window.ISLAND_PROPS = JSON.parse(
         name: "island:inject",
         enforce: "post",
         resolveId(id) {
-          if (id.includes(_chunk4YL7YWL5js.MASK_SPLITTER)) {
-            const [originId, importer] = id.split(_chunk4YL7YWL5js.MASK_SPLITTER);
+          if (id.includes(_chunkQXXSIPNXjs.MASK_SPLITTER)) {
+            const [originId, importer] = id.split(_chunkQXXSIPNXjs.MASK_SPLITTER);
             return this.resolve(originId, importer, { skipSelf: true });
           }
           if (id === injectId) {
@@ -115,11 +115,14 @@ async function renderPages(render, routes, root, clientBundle) {
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
+      const helmetContext = {
+        context: {}
+      };
       const {
         appHtml,
         islandToPathMap,
         islandProps = []
-      } = await render(routePath);
+      } = await render(routePath, helmetContext.context);
       const styleAssets = clientBundle.output.filter(
         (chunk) => chunk.type === "asset" && chunk.fileName.endsWith(".css")
       );
@@ -127,19 +130,23 @@ async function renderPages(render, routes, root, clientBundle) {
       debugger;
       const islandsCode = islandBundle.output[0].code;
       const normalizeVendorFilename = (fileName2) => fileName2.replace(/\//g, "_") + ".js";
+      const { helmet } = helmetContext.context;
       const html = `
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>title</title>
+    ${_optionalChain([helmet, 'optionalAccess', _2 => _2.title, 'optionalAccess', _3 => _3.toString, 'call', _4 => _4()]) || ""}
+    ${_optionalChain([helmet, 'optionalAccess', _5 => _5.meta, 'optionalAccess', _6 => _6.toString, 'call', _7 => _7()]) || ""}
+    ${_optionalChain([helmet, 'optionalAccess', _8 => _8.link, 'optionalAccess', _9 => _9.toString, 'call', _10 => _10()]) || ""}
+    ${_optionalChain([helmet, 'optionalAccess', _11 => _11.style, 'optionalAccess', _12 => _12.toString, 'call', _13 => _13()]) || ""}
     <meta name="description" content="xxx">
     ${styleAssets.map((item) => `<link rel="stylesheet" href="/${item.fileName}">`).join("\n")}
     <script type="importmap">
       {
         "imports": {
-          ${_chunk4YL7YWL5js.EXTERNALS.map(
+          ${_chunkQXXSIPNXjs.EXTERNALS.map(
         (name) => `"${name}": "/${normalizeVendorFilename(name)}"`
       ).join(",")}
         }
@@ -149,7 +156,7 @@ async function renderPages(render, routes, root, clientBundle) {
   <body>
     <div id="root">${appHtml}</div>
     <script type="module">${islandsCode}<\/script>
-    <script type="module" src="/${_optionalChain([clientChunk, 'optionalAccess', _2 => _2.fileName])}"><\/script>
+    <script type="module" src="/${_optionalChain([clientChunk, 'optionalAccess', _14 => _14.fileName])}"><\/script>
     <script id="island-props">${JSON.stringify(islandProps)}<\/script>
   </body>
 </html>`.trim();

@@ -5,7 +5,7 @@ import {
   PACKAGE_ROOT,
   SERVER_ENTRY_PATH,
   createVitePlugins
-} from "./chunk-NMNGLGO3.mjs";
+} from "./chunk-3BLMIU5J.mjs";
 import {
   resolveConfig
 } from "./chunk-ECJZXT62.mjs";
@@ -115,11 +115,14 @@ async function renderPages(render, routes, root, clientBundle) {
   return Promise.all(
     routes.map(async (route) => {
       const routePath = route.path;
+      const helmetContext = {
+        context: {}
+      };
       const {
         appHtml,
         islandToPathMap,
         islandProps = []
-      } = await render(routePath);
+      } = await render(routePath, helmetContext.context);
       const styleAssets = clientBundle.output.filter(
         (chunk) => chunk.type === "asset" && chunk.fileName.endsWith(".css")
       );
@@ -127,13 +130,17 @@ async function renderPages(render, routes, root, clientBundle) {
       debugger;
       const islandsCode = islandBundle.output[0].code;
       const normalizeVendorFilename = (fileName2) => fileName2.replace(/\//g, "_") + ".js";
+      const { helmet } = helmetContext.context;
       const html = `
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>title</title>
+    ${helmet?.title?.toString() || ""}
+    ${helmet?.meta?.toString() || ""}
+    ${helmet?.link?.toString() || ""}
+    ${helmet?.style?.toString() || ""}
     <meta name="description" content="xxx">
     ${styleAssets.map((item) => `<link rel="stylesheet" href="/${item.fileName}">`).join("\n")}
     <script type="importmap">
