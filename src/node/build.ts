@@ -145,7 +145,7 @@ export async function renderPages(
     (chunk) => chunk.type === 'chunk' && chunk.isEntry
   );
   return Promise.all(
-    routes.map(async (route) => {
+    [...routes, { path: '/404' }].map(async (route) => {
       const routePath = route.path;
       const helmetContext = {
         context: {}
@@ -159,7 +159,6 @@ export async function renderPages(
         (chunk) => chunk.type === 'asset' && chunk.fileName.endsWith('.css')
       );
       const islandBundle = await buildIslands(root, islandToPathMap);
-      debugger;
       const islandsCode = (islandBundle as RollupOutput).output[0].code;
       const normalizeVendorFilename = (fileName: string) =>
         fileName.replace(/\//g, '_') + '.js';

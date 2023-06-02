@@ -113,7 +113,7 @@ async function renderPages(render, routes, root, clientBundle) {
     (chunk) => chunk.type === "chunk" && chunk.isEntry
   );
   return Promise.all(
-    routes.map(async (route) => {
+    [...routes, { path: "/404" }].map(async (route) => {
       const routePath = route.path;
       const helmetContext = {
         context: {}
@@ -127,7 +127,6 @@ async function renderPages(render, routes, root, clientBundle) {
         (chunk) => chunk.type === "asset" && chunk.fileName.endsWith(".css")
       );
       const islandBundle = await buildIslands(root, islandToPathMap);
-      debugger;
       const islandsCode = islandBundle.output[0].code;
       const normalizeVendorFilename = (fileName2) => fileName2.replace(/\//g, "_") + ".js";
       const { helmet } = helmetContext.context;
@@ -178,6 +177,46 @@ async function build(root = process.cwd(), config) {
   }
 }
 
+// src/node/preview.ts
+import compression from "compression";
+import polka from "polka";
+import path2 from "path";
+import fs2 from "fs-extra";
+import sirv from "sirv";
+var DEFAULT_PORT = 4173;
+async function preview(root, { port }) {
+  const config = await resolveConfig(root, "serve", "production");
+  const listenPort = port ?? DEFAULT_PORT;
+  const outputDir = path2.resolve(root, "build");
+  const notFoundPage = fs2.readFileSync(
+    path2.resolve(outputDir, "404.html"),
+    "utf-8"
+  );
+  const compress = compression();
+  const serve = sirv(outputDir, {
+    etag: true,
+    maxAge: 31536e3,
+    immutable: true,
+    setHeaders(res, pathname) {
+      if (pathname.endsWith(".html")) {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    }
+  });
+  const onNoMatch = (req, res) => {
+    res.statusCode = 404;
+    res.end(notFoundPage);
+  };
+  polka({ onNoMatch }).use(compress, serve).listen(listenPort, (err) => {
+    if (err) {
+      throw err;
+    }
+    console.log(
+      `> Preview server is running at http://localhost:${listenPort}`
+    );
+  });
+}
+
 // src/node/cli.ts
 var cli = cac("island").version("0.0.1").help();
 cli.command("dev [root]", "start dev server").action(async (root) => {
@@ -197,6 +236,14 @@ cli.command("build [root]", "build in production").action(async (root) => {
     root = resolve(root);
     const config = await resolveConfig(root, "build", "production");
     await build(root, config);
+  } catch (e) {
+    console.log(e);
+  }
+});
+cli.command("preview [root]", "preview production build").option("--port <port>", "port to use for preview server").action(async (root, { port }) => {
+  try {
+    root = resolve(root);
+    await preview(root, { port });
   } catch (e) {
     console.log(e);
   }
