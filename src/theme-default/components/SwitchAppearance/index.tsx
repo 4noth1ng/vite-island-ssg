@@ -8,6 +8,10 @@ interface SwitchProps {
   id?: string;
 }
 
+interface SwitchAppProps {
+  __island?: boolean;
+}
+
 export function Switch(props: SwitchProps) {
   return (
     <button
@@ -24,7 +28,7 @@ export function Switch(props: SwitchProps) {
   );
 }
 
-export function SwitchAppearance() {
+export function SwitchAppearance(props: SwitchAppProps) {
   return (
     <Switch onClick={toggle}>
       <div className={styles.sun}>

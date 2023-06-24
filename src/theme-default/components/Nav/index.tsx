@@ -2,6 +2,7 @@ import styles from './index.module.scss';
 import { NavItemWithLink } from 'shared/types';
 import { usePageData } from '@runtime';
 import { SwitchAppearance } from '../SwitchAppearance';
+import { PropsWithIsland } from 'shared/types';
 
 export function MenuItem({ item }: { item: NavItemWithLink }) {
   return (
@@ -43,7 +44,7 @@ export function Nav() {
 
           {/* 白天/夜间模式切换 */}
           <div before="menu-item-before" flex="~">
-            <SwitchAppearance />
+            <SwitchAppearance __island />
           </div>
 
           {/* 相关链接 */}

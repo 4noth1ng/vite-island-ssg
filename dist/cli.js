@@ -58,7 +58,7 @@ async function bundle(root, config) {
 async function buildIslands(root, islandPathToMap) {
   const islandsInjectCode = `
     ${Object.entries(islandPathToMap).map(
-    ([islandName, islandPath]) => `import { ${islandName} } from '${islandPath}'`
+    ([islandName, islandPath]) => `import { ${islandName} } from '${islandPath}';`
   ).join("")}
 window.ISLANDS = { ${Object.keys(islandPathToMap).join(", ")} };
 window.ISLAND_PROPS = JSON.parse(
